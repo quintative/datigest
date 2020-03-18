@@ -42,7 +42,10 @@ ClusterHC <- function(input, output, session, data){
   hcluster <- eventReactive(input$do.clust.hc, {
     dt.int <- data()
     dt.int <- dt.int[(!is.na(x) & !is.na(y))]
-    dt.int <- as.data.table(normalizeFeatures(as.data.frame(dt.int), cols = c("x", "y"), method = "standardize"))
+    
+    # 1 Standardization
+    dt.int[, ":=" (x_std = (x - mean(x)) / sd(x),
+                   y_std = (y - mean(y)) / sd(y))]
     
     # Creating eucledian distance matrix
     dt.d <- dist(dt.int)
