@@ -36,7 +36,9 @@ ClusterDB <- function(input, output, session, data){
   dbased <- eventReactive(input$do.clust.db, {
     dt.int <- data()
     dt.int <- dt.int[(!is.na(x) & !is.na(y))]
-    dt.int <- as.data.table(normalizeFeatures(as.data.frame(dt.int), cols = c("x", "y"), method = "standardize"))
+    # 1 Standardization
+    dt.int[, ":=" (x_std = (x - mean(x)) / sd(x),
+                   y_std = (y - mean(y)) / sd(y))]
     
     fpc.clust <- dbscan(dt.int, eps = input$sl.eps, MinPts = input$ni.n)
     dt.db <- dt.int[, .(x, y, cl = fpc.clust$cluster)]
