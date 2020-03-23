@@ -1,5 +1,3 @@
-# source("//DELL2950-1/Alambic/Quindeau/General/R/Shiny apps/2D clustering/XXXUdo2DClust.R")
-
 GUI_2DClust <- function(data, temp = NULL){
   
   # Modules

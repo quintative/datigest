@@ -1,10 +1,9 @@
+source("libs_functions.R")
+
 # Getting a simple linear regression estimate from a 2D data.table
-
 # Let's see what the most performant approach is
-
 # Making a really big data.table (something that will take at least a second to run)
-
-n <- 1E7
+n <- 1E6
 dt.x <- data.table(x = rnorm(n))
 dt.x[, y := 1.2 * x + 2]
 dt.x[, y := y + rnorm(n, 0, 3)]
