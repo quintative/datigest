@@ -60,8 +60,3 @@ OneHotEncoding <- function(datatable, colname = "test", min.factor.pct = 0.01){
   dt.int[, (paste0(colname, "_agg")) := NULL]
   return(dt.int)
 }
-
-# A function that normalizes features of a data table
-NormalizeFeatures <- function(datatable, colnames, wins = F){
-  
-}
