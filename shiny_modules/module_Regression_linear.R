@@ -1,4 +1,17 @@
-# Run regression and plot (max number of points 1000)
+# Run plot only
+JustPlot <- function(data){
+  colnames(data) <- c("x", "y")
+  
+  if(length(data) > 1000){
+    sample_n(data, 1000) %>% ggplot(aes(x, y)) + geom_point() +
+      theme(legend.position = "none") 
+  } else{
+    data %>% ggplot(aes(x, y)) + geom_point() +
+      theme(legend.position = "none") 
+  }
+}
+
+# Run plot with regression (max number of points 1000)
 LinRegPlot <- function(data){
   
   colnames(data) <- c("x", "y")
@@ -37,13 +50,19 @@ RegressionLinUI <- function(id, label = "Regression") {
     sidebarLayout(
       sidebarPanel(
        
-        actionButton(ns("do.linreg"), "Linear regression"),
+        actionButton(ns("do.justplot"), "Plot the data"),
+        
+        actionButton(ns("do.linreg"), "OLS lin. regression"),
         
         tags$hr()
         
       ),
       mainPanel(
+        
+        plotOutput(ns("plt.just")) , 
+        
         plotOutput(ns("plt.lin.reg")) 
+        
       )
     )
   )
@@ -54,14 +73,28 @@ RegressionLin <- function(input, output, session, data){
   
   # ============================================================
   
+  plotting <- eventReactive(input$do.justplot, {
+    dt.int <- data()
+    
+    dt.int <- dt.int[(!is.na(x) & !is.na(y))]
+    
+    plt <- JustPlot(dt.int)
+    
+    return(plt)
+  })
+  
   linreg <- eventReactive(input$do.linreg, {
     dt.int <- data()
-    # 1 Standardization
+    
     dt.int <- dt.int[(!is.na(x) & !is.na(y))]
     
     plt <- LinRegPlot(dt.int)
     
     return(plt)
+  })
+  
+  observe({
+    output$plt.just <- renderPlot({plotting()})
   })
   
   observe({

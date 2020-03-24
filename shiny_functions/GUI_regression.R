@@ -16,8 +16,8 @@ GUI_Regress <- function(data, temp = NULL){
                FileUI("datafile", "User Data")
       ),
       # ============================================================
-      tabPanel("clust.pl",
-               RegressionLinUI("linreg.pl", "Clustering")
+      tabPanel("lin reg",
+               RegressionLinUI("linreg.pl", "simple regression")
       )
     )
   )
