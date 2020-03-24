@@ -60,3 +60,50 @@ OneHotEncoding <- function(datatable, colname = "test", min.factor.pct = 0.01){
   dt.int[, (paste0(colname, "_agg")) := NULL]
   return(dt.int)
 }
+
+# A legendre fit up to 5th order
+FitLegendre <- function(dt, n = 3){
+  
+  dt <- as.data.table(dt)
+  
+  FLegendre <- function(x, m){
+    if(m == 1){y <- x}
+    if(m == 2){y <- 1/2 * ( 3 * x ** 2 -  1)}
+    if(m == 3){y <- 1/2 * ( 5 * x ** 3 -  3 * x)}
+    if(m == 4){y <- 1/8 * (35 * x ** 4 - 30 * x ** 2 +  3)}
+    if(m == 5){y <- 1/8 * (63 * x ** 5 - 70 * x ** 3 + 15 * x)}
+    return(y)
+  }
+  
+  if(n == 1){
+    model <- lm(dt$y ~ FLegendre(x = dt$x, m = 1))
+  }
+  
+  if(n == 3){
+    model <- lm(dt$y ~ FLegendre(x = dt$x, m = 1) +
+                  FLegendre(x = dt$x, m = 2))
+  }
+  
+  if(n == 3){
+    model <- lm(dt$y ~ FLegendre(x = dt$x, m = 1) +
+                  FLegendre(x = dt$x, m = 2) +
+                  FLegendre(x = dt$x, m = 3))
+  }
+  
+  if(n == 4){
+    model <- lm(dt$y ~ FLegendre(x = dt$x, m = 1) +
+                  FLegendre(x = dt$x, m = 2) +
+                  FLegendre(x = dt$x, m = 3) +
+                  FLegendre(x = dt$x, m = 4))
+  }
+  
+  if(n == 5){
+    model <- lm(dt$y ~ FLegendre(x = dt$x, m = 1) +
+                  FLegendre(x = dt$x, m = 2) +
+                  FLegendre(x = dt$x, m = 3) +
+                  FLegendre(x = dt$x, m = 4) +
+                  FLegendre(x = dt$x, m = 5))
+  }
+  
+  return(model)
+}
