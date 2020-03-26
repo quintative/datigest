@@ -15,3 +15,4 @@ dt.x %>% ggplot(aes(x2, y2)) + geom_point()
 # test
 GUI_2DClust(dt.x)
 GUI_Regress(dt.x)
+
