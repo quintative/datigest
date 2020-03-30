@@ -107,3 +107,25 @@ FitLegendre <- function(dt, n = 3){
   
   return(model)
 }
+
+# Create a function that, similar to the winsorization function, looks at the inner x percentile of the data and then puts out a weight 
+# vector based on a z-score that is deemed to be an outlier.
+HuberLossWins <- function(y, inner.quantile = 0.9, sig.outlier = 5){
+  
+  # Getting the inner distribution (presumably exclouding outliers, assuming they are rare and not fat tails)
+  inner.y <- y[which(y <= as.numeric(quantile(y, inner.quantile)))]
+  inner.y <- inner.y[which(inner.y >= as.numeric(quantile(inner.y, (1 - inner.quantile))))]
+  sd.y <- sd(inner.y)
+  
+  # Defining the boundary for what we consider an outlier to be
+  outlier.boundary <- sig.outlier  * sd.y
+  
+  # Creating the weight vector based on Huber loss function
+  w <- sapply(y, function(val) {
+    if(abs(val) < outlier.boundary){out <- 1}
+    else{out <- abs(val)}
+    return(outlier.boundary / out)
+  })
+  
+  return(w)
+}

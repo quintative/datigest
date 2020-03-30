@@ -53,7 +53,7 @@ t.stripped.errors <- sapply(1:10, function(x){
   X <- matrix(c(rep(1, n.l), x), ncol = 2)
   # Getting the intercept and coefficient
   M.coefs <- solve(t(X) %*% X) %*% t(X) %*% y
-  # Computing the sums of squares and variance
+  # Computing hat matrix and variance
   y.hat <- X %*% M.coefs
   variance <- sum((y - y.hat)**2) / (n.l - 2)
   s.beta <- sqrt(variance / sum((x - mean(x))**2))
@@ -61,6 +61,21 @@ t.stripped.errors <- sapply(1:10, function(x){
   return(b - a)
 }) %>% sum()
 
-# Wow - including the standard error of the estimator makes it ~ 4 times faster that way!
+t.c.errors <- sapply(1:10, function(x){
+  a <- Sys.time()
+  x <- dt.x[, x]
+  X <- matrix(c(rep(1, length(x)), x), ncol = 2)
+  # Defining the independent variable
+  model <- lm.fit(X, dt.x[, y])
+  coefs <- coef(model)
+  variance <- var(model$residuals)
+  s.beta <- sqrt(variance / sum((x - mean(x))**2))
+  b <- Sys.time()
+  return(b - a)
+}) %>% sum()
+
+# Wow - including the standard error of the estimator makes it ~ 6 times faster that way!
 # The build in function sucks!! - let's build our own stuff
-t.normal.errors / t.stripped.errors
+t.normal.errors 
+t.stripped.errors
+t.c.errors
