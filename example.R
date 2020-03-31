@@ -25,5 +25,6 @@ GUI_2DClust(dt.x)
 dt.x <- GenLinDataNorm(1000, y.norm = c(0, 1), x.norm = c(0, 1), rsq = 0.4)
 
 # Starting the regression
+source(paste0(p.shiny.fcts, "GUI_regression.R"))
 GUI_Regress(dt.x)
 

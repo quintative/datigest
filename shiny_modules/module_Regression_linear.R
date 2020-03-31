@@ -3,11 +3,15 @@ JustPlot <- function(data){
   colnames(data) <- c("x", "y")
   
   if(length(data) > 1000){
-    sample_n(data, 1000) %>% ggplot(aes(x, y)) + geom_point() +
-      theme(legend.position = "none") 
+    sample_n(data, 1000) %>% ggplot(aes(x, y)) + geom_point(color = "white") +
+      theme(legend.position = "none") + 
+      ggtitle("Just the data - truncated to 1000") +
+      theme_black()
   } else{
-    data %>% ggplot(aes(x, y)) + geom_point() +
-      theme(legend.position = "none") 
+    data %>% ggplot(aes(x, y)) + geom_point(color = "white") +
+      theme(legend.position = "none") +
+      ggtitle("Just the data - all of it") +
+      theme_black()
   }
 }
 
@@ -29,15 +33,17 @@ LinRegPlot <- function(data){
   s.beta <- sqrt(variance / sum((x - mean(x))**2))
   
   if(length(data) > 1000){
-    sample_n(data, 1000) %>% ggplot(aes(x, y)) + geom_point() +
+    sample_n(data, 1000) %>% ggplot(aes(x, y)) + geom_point(color = "white") +
       geom_abline(slope = M.coefs[2, 1], intercept = M.coefs[1, 1], color = "red", size = 2) +
       theme(legend.position = "none") +
-      ggtitle(paste0("beta = ", signif(M.coefs[2, 1], 3), " se(beta) = ", signif(s.beta, 3)))
+      ggtitle(paste0("beta = ", signif(M.coefs[2, 1], 3), " se(beta) = ", signif(s.beta, 3))) +
+      theme_black()
   } else{
-    data %>% ggplot(aes(x, y)) + geom_point() +
+    data %>% ggplot(aes(x, y)) + geom_point(color = "white") +
       geom_abline(slope = M.coefs[2, 1], intercept = M.coefs[1, 1], color = "red", size = 2) +
       theme(legend.position = "none") +
-      ggtitle(paste0("beta = ", signif(M.coefs[2, 1], 3), " se(beta) = ", signif(s.beta, 3)))
+      ggtitle(paste0("beta = ", signif(M.coefs[2, 1], 3), " se(beta) = ", signif(s.beta, 3))) +
+      theme_black()
   }
 }
 
@@ -65,15 +71,17 @@ LinRegRobPlot <- function(data){
   s.beta <- sqrt(variance / sum((x - mean(x))**2))
   
   if(length(data) > 1000){
-    sample_n(data, 1000) %>% ggplot(aes(x, y)) + geom_point() +
+    sample_n(data, 1000) %>% ggplot(aes(x, y)) + geom_point(color = "white") +
       geom_abline(slope = coef.hub[2, 1], intercept = coef.hub[1, 1], color = "red", size = 2) +
       theme(legend.position = "none") +
-      ggtitle(paste0("beta = ", signif(coef.hub[2, 1], 3), " se(beta) = ", signif(s.beta, 3)))
+      ggtitle(paste0("beta = ", signif(coef.hub[2, 1], 3), " se(beta) = ", signif(s.beta, 3))) +
+      theme_black()
   } else{
-    data %>% ggplot(aes(x, y)) + geom_point() +
+    data %>% ggplot(aes(x, y)) + geom_point(color = "white") +
       geom_abline(slope = coef.hub[2, 1], intercept = coef.hub[1, 1], color = "red", size = 2) +
       theme(legend.position = "none") +
-      ggtitle(paste0("beta = ", signif(coef.hub[2, 1], 3), " se(beta) = ", signif(s.beta, 3)))
+      ggtitle(paste0("beta = ", signif(coef.hub[2, 1], 3), " se(beta) = ", signif(s.beta, 3))) +
+      theme_black()
   }
 }
 
@@ -83,29 +91,18 @@ RegressionLinUI <- function(id, label = "Regression") {
   # Create a namespace function using the provided id
   ns <- NS(id)
   
-  tagList(
-    sidebarLayout(
-      sidebarPanel(
-       
-        actionButton(ns("do.justplot"), "Plot the data"),
-        
-        actionButton(ns("do.linreg"), "OLS lin. regression"),
-        
-        actionButton(ns("do.roblinreg"), "Huber OLS lin. regression"),
-        
-        tags$hr()
-        
-      ),
-      mainPanel(
-        
-        plotOutput(ns("plt.just")), 
-        
-        plotOutput(ns("plt.lin.reg")), 
-        
-        plotOutput(ns("plt.hub.lin.reg"))
-        
-      )
-    )
+  dashboardPage(
+    dashboardHeader(),
+    dashboardSidebar(
+      tags$hr(),
+      actionButton(ns("do.justplot"), "Plot the data"),
+      tags$hr(),
+      actionButton(ns("do.linreg"), "OLS lin. regression"),
+      tags$hr(),
+      actionButton(ns("do.roblinreg"), "Huber OLS lin. regression"),
+      tags$hr()
+    ),
+    dashboardBody(plotOutput(ns("plt.regr")))
   )
 }
 
@@ -114,48 +111,29 @@ RegressionLin <- function(input, output, session, data){
   
   # ============================================================
   
-  plotting <- eventReactive(input$do.justplot, {
-    dt.int <- data()
-    
-    dt.int <- dt.int[(!is.na(x) & !is.na(y))]
-    
-    plt <- JustPlot(dt.int)
-    
-    return(plt)
-  })
+  # hublinreg <- eventReactive(input$do.justplot, {
+  #   dt.int <- data()
+  #   dt.int <- dt.int[(!is.na(x) & !is.na(y))]
+  #   plt <- LinRegRobPlot(dt.int)
+  #   return(plt)
+  # })
+  observeEvent(input$do.justplot, 
+               {dt.int <- data()
+               dt.int <- dt.int[(!is.na(x) & !is.na(y))]
+               plt <- JustPlot(dt.int)
+               output$plt.regr <- renderPlot(plt)})
   
-  linreg <- eventReactive(input$do.linreg, {
-    dt.int <- data()
-    
-    dt.int <- dt.int[(!is.na(x) & !is.na(y))]
-    
-    plt <- LinRegPlot(dt.int)
-    
-    return(plt)
-  })
+  observeEvent(input$do.linreg, 
+               {dt.int <- data()
+               dt.int <- dt.int[(!is.na(x) & !is.na(y))]
+               plt <- LinRegPlot(dt.int)
+               output$plt.regr <- renderPlot(plt)})
   
-  hublinreg <- eventReactive(input$do.roblinreg, {
-    dt.int <- data()
-    
-    dt.int <- dt.int[(!is.na(x) & !is.na(y))]
-    
-    plt <- LinRegRobPlot(dt.int)
-    
-    return(plt)
-  })
-  
-  observe({
-    output$plt.just <- renderPlot({plotting()})
-  })
-  
-  observe({
-    output$plt.lin.reg <- renderPlot({linreg()})
-  })
-  
-  observe({
-    output$plt.hub.lin.reg <- renderPlot({hublinreg()})
-  })
-  
+  observeEvent(input$do.roblinreg, 
+               {dt.int <- data()
+               dt.int <- dt.int[(!is.na(x) & !is.na(y))]
+               plt <- LinRegRobPlot(dt.int)
+               output$plt.regr <- renderPlot(plt)})
 }
 
 
