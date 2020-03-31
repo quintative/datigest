@@ -4,6 +4,7 @@ GUI_Regress <- function(data, temp = NULL){
   # Define the home directory where you've stored the modules
   source(paste0(p.shiny.mods, "module_Regression_linear.R"), local = T)
   source(paste0(p.shiny.fcts, "data_select.R"), local = T)
+  source("ggplot_themes.R")
   
   # --------------------------------------------------------------------------------------------------------------
   

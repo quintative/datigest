@@ -4,13 +4,14 @@
 library(data.table)
 library(ggplot2)
 library(dplyr)
-require(MASS)
+library(MASS)
 # Shiny app
-require(shiny)
+library(shiny)
+library(shinydashboard)
 # Density Based Clustering
-require(fpc)
+library(fpc)
 # Developer tools
-require(devtools)
+library(devtools)
 #######################################################################
 # Paths
 p.shiny.fcts <- paste0(getwd(), "/shiny_functions/")
