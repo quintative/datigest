@@ -16,7 +16,7 @@ LinRegPlot <- function(data){
   s.beta <- sqrt(variance / sum((x - mean(x))**2))
   
   if(nrow(data) > 5000){
-    dt.int <- sample_n(data)
+    dt.int <- as.data.table(sample_n(data, 5000))
   } else{
     dt.int <- data
   }
@@ -57,7 +57,7 @@ LinRegRobPlot <- function(data){
   s.beta <- sqrt(variance / sum((x - mean(x))**2))
 
   if(nrow(data) > 5000){
-    dt.int <- sample_n(data)
+    dt.int <- as.data.table(sample_n(data, 5000))
   } else{
     dt.int <- data
   }
