@@ -3,6 +3,7 @@
 # We want to keep this minimal
 library(data.table)
 library(ggplot2)
+library(plotly)
 library(dplyr)
 library(MASS)
 # Shiny app
@@ -16,7 +17,6 @@ library(devtools)
 # Paths
 p.shiny.fcts <- paste0(getwd(), "/shiny_functions/")
 p.shiny.mods <- paste0(getwd(), "/shiny_modules/")
-p.dev.fncion <- paste0(getwd(), "/dev_functionalities/")
 #######################################################################
 # Helper functions
 

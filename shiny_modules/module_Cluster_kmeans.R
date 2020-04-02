@@ -1,7 +1,12 @@
 # Creating the "elbow" plot
 ElbowPlot <- function(data_int, k_max = 10){
   ellbow <- data.table(k = 1:k_max, within_ss = sapply(1:k_max, function(x){kmeans(data_int[, 1:2], x)$tot.withinss}))
-  ellbow %>% ggplot(aes(k, within_ss)) + geom_point() + geom_line() + scale_x_continuous(breaks = 1:k_max)
+  plt <- ellbow %>% 
+    plot_ly(x = ~k, y = ~within_ss) %>% 
+    add_markers(color = I("black")) %>% 
+    add_lines(color = I("black")) %>%
+    layout(showlegend = F)
+  return(plt)
 }
 
 # Run K-means and plot it
@@ -12,9 +17,20 @@ KmeansPlot <- function(data, k){
   centers <- as.data.table(model$centers)
   colnames(centers) <- c("x", "y")
   centers[, cluster := as.factor(1:.N)]
-  data %>% ggplot(aes(x, y, colour = cluster)) + geom_point() +
-    geom_label(data = centers, aes(x, y, label = paste0("x: ", centers[cluster == cluster, signif(x, 3)], "\ny: ", centers[cluster == cluster, signif(y, 3)])), alpha = 0.9) +
-    theme(legend.position = "none")
+  if(nrow(data) > 5000){
+    dt.int <- sample_n(data)
+  } else{
+    dt.int <- data
+  }
+  
+  plt <- dt.int %>% 
+    plot_ly(x = ~x, y = ~y, color = ~cluster) %>%
+    add_markers() %>%
+    add_annotations(data = centers,
+                    x = ~x,
+                    y = ~y,
+                    text = paste0("x: ", centers[cluster == cluster, signif(x, 3)], "\ny: ", centers[cluster == cluster, signif(y, 3)]))
+  return(plt)
 }
 
 ClusterKMUI <- function(id, label = "Clustering") {
@@ -22,29 +38,23 @@ ClusterKMUI <- function(id, label = "Clustering") {
   # Create a namespace function using the provided id
   ns <- NS(id)
   
-  tagList(
-    sidebarLayout(
-      sidebarPanel(
-        
-        sliderInput(ns("sl.num.max.elb"), "Max number for Elbow Plot",
-                    min = 2, max = 20, value = 10, step = 1),
-        
-        actionButton(ns("do.elb.km"), "K-means <Elbow>"),
-        
-        sliderInput(ns("sl.num.clust"), "Number of clusters (where applicable)",
-                    min = 2, max = 10, value = 2, step = 1),
-        
-        actionButton(ns("do.km"), "K-means"),
-        
-        tags$hr()
-        
-      ),
-      mainPanel(
-        plotOutput(ns("plt.clust.km.elb")) ,
-        plotOutput(ns("plt.clust.km"))
-      )
-      
-    )
+  dashboardPage(
+    
+    dashboardHeader(),
+    
+    dashboardSidebar(
+      sliderInput(ns("sl.num.max.elb"), "Max number for Elbow Plot",
+                  min = 2, max = 20, value = 10, step = 1),
+      actionButton(ns("do.elb.km"), "K-means <Elbow>"),
+      sliderInput(ns("sl.num.clust"), "Number of clusters (where applicable)",
+                  min = 2, max = 10, value = 2, step = 1),
+      actionButton(ns("do.km"), "K-means"),
+      tags$hr()),
+    
+    dashboardBody(
+        plotlyOutput(ns("plt.clust.km.elb"), width = "800px", height = "600px") ,
+        plotlyOutput(ns("plt.clust.km"), width = "800px", height = "600px")
+        )
   )
 }
 
@@ -78,11 +88,11 @@ ClusterKM <- function(input, output, session, data){
   })
   
   observe({
-    output$plt.clust.km.elb <- renderPlot({kmeans.ellb()})
+    output$plt.clust.km.elb <- renderPlotly({kmeans.ellb()})
   })
   
   observe({
-    output$plt.clust.km <- renderPlot({kmeans()})
+    output$plt.clust.km <- renderPlotly({kmeans()})
   })
 }
 
