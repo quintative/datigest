@@ -1,11 +1,18 @@
 source("libs_functions.R")
 source("dev_functionalities/data_generation.R")
-source(paste0(p.shiny.fcts, "GUI_2DClust.R"))
-source(paste0(p.shiny.fcts, "GUI_regression.R"))
 
-
-# Clustering
 ############################################################################################################
+
+# Create some data
+dt.x <- GenLinDataNorm(5000, y.norm = c(0, 1), x.norm = c(0, 1), rsq = 0.4)
+AddIndepLinNorm(dt.x, "x2", "y")
+AddIndepLinNorm(dt.x, "x3", "y")
+
+# Starting the regression
+source(paste0(p.shiny.fcts, "GUI_2danalysis.R"))
+GUI_2Danalysis(dt.x)
+
+
 
 # Creating two normally distributed clusters
 dt.x <- data.table(x1 = rnorm(1000), y1 = rnorm(1000))
@@ -17,14 +24,3 @@ dt.x[, y2 := x2**2]
 
 # test
 GUI_2DClust(dt.x)
-
-# Clustering
-############################################################################################################
-
-# Create some data
-dt.x <- GenLinDataNorm(1000, y.norm = c(0, 1), x.norm = c(0, 1), rsq = 0.4)
-
-# Starting the regression
-source(paste0(p.shiny.fcts, "GUI_regression.R"))
-GUI_Regress(dt.x)
-
