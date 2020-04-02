@@ -3,7 +3,7 @@ GUI_2Danalysis <- function(data, temp = NULL){
   # Modules
   # Define the home directory where you've stored the modules
   source(paste0(p.shiny.fcts, "data_select.R"), local = T)
-  source(paste0(p.shiny.mods, "module_Regression_linear.R"), local = T)
+  source(paste0(p.shiny.mods, "module_OLS_fit.R"), local = T)
   source(paste0(p.shiny.mods, "module_Cluster_kmeans.R"), local = T)
   source(paste0(p.shiny.mods, "module_Cluster_hc.R"), local = T)
   source(paste0(p.shiny.mods, "module_Cluster_db.R"), local = T)
@@ -20,7 +20,7 @@ GUI_2Danalysis <- function(data, temp = NULL){
                FileUI("datafile", "User Data")
       ),
       # ============================================================
-      tabPanel("lin reg",
+      tabPanel("OLS fit",
                RegressionLinUI("linreg.pl", "simple regression")
       ),
       # ============================================================
