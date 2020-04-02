@@ -2,27 +2,17 @@ ClusterDBUI <- function(id, label = "Clustering") {
   
   # Create a namespace function using the provided id
   ns <- NS(id)
-  
-  tagList(
-    sidebarLayout(
-      sidebarPanel(
-        
-        
-        sliderInput(ns("sl.eps"), "Epsilon",
-                    min = 0.001, max = 0.5, value = 0.1),
-        
-        numericInput(ns("ni.n"), "min N", value = 10),
-        
-        
-        tags$hr(),
-        
-        actionButton(ns("do.clust.db"), "Density Based")
-        
-      ),
-      mainPanel(
-        plotOutput(ns("plt.clust.db"))
-      )
-      
+  dashboardPage(
+    dashboardHeader(),
+    dashboardSidebar(
+      sliderInput(ns("sl.eps"), "Epsilon",
+                  min = 0.001, max = 0.5, value = 0.1),
+      numericInput(ns("ni.n"), "min N", value = 10),
+      tags$hr(),
+      actionButton(ns("do.clust.db"), "Density Based") 
+    ),
+    dashboardBody(
+      plotlyOutput(ns("plt.clust.db"), width = "800px", height = "600px")
     )
   )
 }
@@ -30,9 +20,7 @@ ClusterDBUI <- function(id, label = "Clustering") {
 # --------------------------------------------------------------------------------------------------------------
 ClusterDB <- function(input, output, session, data){
   
-  
   # ============================================================
-  
   dbased <- eventReactive(input$do.clust.db, {
     dt.int <- data()
     dt.int <- dt.int[(!is.na(x) & !is.na(y))]
@@ -43,13 +31,22 @@ ClusterDB <- function(input, output, session, data){
     fpc.clust <- dbscan(dt.int, eps = input$sl.eps, MinPts = input$ni.n)
     dt.db <- dt.int[, .(x, y, cl = fpc.clust$cluster)]
     
-    plt <- ggplot(dt.db, aes(x = x, y = y, colour = paste0(cl))) + geom_point()
+    if(nrow(dt.db) > 5000){
+      dt.db <- as.data.table(sample_n(dt.db, 5000))
+    }
+    
+    dt.db[, cl := as.factor(cl)]
+    
+    plt <- dt.db %>%
+      plot_ly(x = ~x, y = ~y, color = ~cl) %>%
+      add_markers(alpha = 0.4) %>% 
+      layout(showlegend = F)
     
     return(plt)
   })
   
   observe({
-    output$plt.clust.db <- renderPlot({dbased()})
+    output$plt.clust.db <- renderPlotly({dbased()})
   })
   
 }

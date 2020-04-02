@@ -1,6 +1,6 @@
 JustPlot <- function(data){
   if(nrow(data) > 5000){
-    dt.int <- sample_n(data)
+    dt.int <- as.data.table(sample_n(data, 5000))
   } else{
     dt.int <- data
   }

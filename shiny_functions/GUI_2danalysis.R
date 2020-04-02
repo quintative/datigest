@@ -5,6 +5,8 @@ GUI_2Danalysis <- function(data, temp = NULL){
   source(paste0(p.shiny.fcts, "data_select.R"), local = T)
   source(paste0(p.shiny.mods, "module_Regression_linear.R"), local = T)
   source(paste0(p.shiny.mods, "module_Cluster_kmeans.R"), local = T)
+  source(paste0(p.shiny.mods, "module_Cluster_hc.R"), local = T)
+  source(paste0(p.shiny.mods, "module_Cluster_db.R"), local = T)
   source("ggplot_themes.R")
   
   # --------------------------------------------------------------------------------------------------------------
@@ -24,6 +26,14 @@ GUI_2Danalysis <- function(data, temp = NULL){
       # ============================================================
       tabPanel("k means",
                ClusterKMUI("kmeans.pl", "km clustering")
+      ),
+      # ============================================================
+      tabPanel("hierarchical cl",
+               ClusterHCUI("hier.pl", "hierar clustering")
+      ),
+      # ============================================================
+      tabPanel("density-based cl",
+               ClusterDBUI("dens.pl", "densbase clustering")
       )
     )
   )
@@ -38,6 +48,10 @@ GUI_2Danalysis <- function(data, temp = NULL){
     callModule(RegressionLin, "linreg.pl", reactive(dt()))
     
     callModule(ClusterKM, "kmeans.pl", reactive(dt()))
+    
+    callModule(ClusterHC, "hier.pl", reactive(dt()))
+    
+    callModule(ClusterDB, "dens.pl", reactive(dt()))
     
   }
   

@@ -11,21 +11,23 @@ ElbowPlot <- function(data_int, k_max = 10){
 
 # Run K-means and plot it
 KmeansPlot <- function(data, k){
+  
   colnames(data) <- c("x", "y")
   model <- kmeans(data[, 1:2], k)
   data[, cluster := as.factor(model$cluster)]
   centers <- as.data.table(model$centers)
   colnames(centers) <- c("x", "y")
   centers[, cluster := as.factor(1:.N)]
+  
   if(nrow(data) > 5000){
-    dt.int <- sample_n(data)
+    dt.int <- as.data.table(sample_n(data, 5000))
   } else{
     dt.int <- data
   }
   
   plt <- dt.int %>% 
     plot_ly(x = ~x, y = ~y, color = ~cluster) %>%
-    add_markers() %>%
+    add_markers(alpha = 0.4) %>%
     add_annotations(data = centers,
                     x = ~x,
                     y = ~y,
