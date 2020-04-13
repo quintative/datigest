@@ -1,39 +1,4 @@
 # Run plot with regression (max number of points 1000)
-LinRegPlot <- function(data){
-  
-  colnames(data) <- c("x", "y")
-  
-  x <- data[, x]
-  y <- data[, y]
-  n.l <- length(y)
-  # Building the matrix of independent variable
-  X <- matrix(c(rep(1, n.l), x), ncol = 2)
-  # Getting the intercept and coefficient
-  M.coefs <- solve(t(X) %*% X) %*% t(X) %*% y
-  # Computing the sums of squares and variance
-  y.hat <- X %*% M.coefs
-  variance <- sum((y - y.hat)**2) / (n.l - 2)
-  s.beta <- sqrt(variance / sum((x - mean(x))**2))
-  
-  if(nrow(data) > 5000){
-    dt.int <- as.data.table(sample_n(data, 5000))
-  } else{
-    dt.int <- data
-  }
-  
-  abline.trace <- data.table(x = seq(from = dt.int[, min(x)], to = dt.int[, max(x)], length.out = 10))
-  abline.trace[, y := M.coefs[2, 1] * x + M.coefs[1, 1]]
-  
-  plt <- dt.int %>%
-    plot_ly(x = ~x, y = ~y) %>%
-    add_markers(color = I("black"), alpha = 0.4)  %>% 
-    add_lines(data = abline.trace, x = ~x, y = ~y, color = I("red")) %>%
-    layout(showlegend = F)
-  
-  return(plt)
-}
-
-# Run plot with regression (max number of points 1000)
 LinRegRobPlot <- function(data){
   
   colnames(data) <- c("x", "y")
@@ -74,6 +39,34 @@ LinRegRobPlot <- function(data){
   return(plt)
 }
 
+LegReg <- function(data, m = 5){
+  if(nrow(data) > 5000){dt.int <- as.data.table(sample_n(data, 5000))} 
+  else{dt.int <- data}
+  
+  result <- FitLegendre(dt.int, n = m)
+
+  # Find the sse and mse
+  sse <- sum((dt.int[, y] - result$model$fitted.values)**2)
+  mse <- sse / (nrow(dt.int) - 2)
+  
+  # Find the critical t-value
+  t.val <- qt(0.975, nrow(dt.int) - 2)
+  
+  dt.fitline <- result$fitline
+  
+  dt.fitline[, twosig_h := y + t.val * sqrt(mse) * sqrt(1 / nrow(dt.int) + (x - dt.int[, mean(x)])**2 / sum((x - dt.int[, mean(x)])**2))]
+  dt.fitline[, twosig_l := y - t.val * sqrt(mse) * sqrt(1 / nrow(dt.int) + (x - dt.int[, mean(x)])**2 / sum((x - dt.int[, mean(x)])**2))]
+  
+  plt <- dt.int %>%
+    plot_ly() %>% 
+    add_lines(data = dt.fitline, x = ~x, y = ~y, color = I("red")) %>%
+    add_trace(data = dt.fitline, x = ~x, y = ~twosig_h, mode = "lines", type = "scatter", color = I("red")) %>%
+    add_trace(data = dt.fitline, x = ~x, y = ~twosig_l, mode = "lines", type = "scatter", color = I("red"), fill = "tonexty", alpha = 0.3) %>%
+    add_markers(data = dt.int, x = ~x, y = ~y, color = I("black"), alpha = 0.4) %>%
+    layout(showlegend = F)
+  
+  return(list(plot = plt, model = result$model))
+}
 
 RegressionLinUI <- function(id, label = "Regression") {
   
@@ -84,12 +77,15 @@ RegressionLinUI <- function(id, label = "Regression") {
     dashboardHeader(),
     dashboardSidebar(
       tags$hr(),
-      actionButton(ns("do.linreg"), "OLS lin. regression"),
+      sliderInput(ns("sl.leg.order"), "Order of Leg. polynom",
+                  min = 1, max = 5, value = 1, step = 1),
+      actionButton(ns("do.legreg"), "OLS linar/Legendre link function"),
       tags$hr(),
       actionButton(ns("do.roblinreg"), "Huber OLS lin. regression"),
       tags$hr()
     ),
-    dashboardBody(plotlyOutput(ns("plt.regr"), width = "800px", height = "600px"))
+    dashboardBody(plotlyOutput(ns("plt.regr"), width = "800px", height = "600px"),
+                  verbatimTextOutput(ns("summ.regr")))
   )
 }
 
@@ -97,17 +93,19 @@ RegressionLinUI <- function(id, label = "Regression") {
 RegressionLin <- function(input, output, session, data){
   
   # ============================================================
-  observeEvent(input$do.linreg, 
-               {dt.int <- data()
-               dt.int <- dt.int[(!is.na(x) & !is.na(y))]
-               plt <- LinRegPlot(dt.int)
-               output$plt.regr <- renderPlotly(plt)})
-  # ============================================================
   observeEvent(input$do.roblinreg, 
                {dt.int <- data()
                dt.int <- dt.int[(!is.na(x) & !is.na(y))]
                plt <- LinRegRobPlot(dt.int)
-               output$plt.regr <- renderPlotly(plt)})
+               output$plt.regr <- renderPlotly(plt)
+               output$summ.regr <- renderPrint(print(NULL))})
+  # ============================================================
+  observeEvent(input$do.legreg, 
+               {dt.int <- data()
+               dt.int <- dt.int[(!is.na(x) & !is.na(y))]
+               result <- LegReg(dt.int, input$sl.leg.order)
+               output$plt.regr <- renderPlotly(result$plot)
+               output$summ.regr <- renderPrint(summary(result$model))})
 }
 
 

@@ -18,6 +18,9 @@ library(devtools)
 p.shiny.fcts <- paste0(getwd(), "/shiny_functions/")
 p.shiny.mods <- paste0(getwd(), "/shiny_modules/")
 #######################################################################
+# Load GUIs
+source(paste0(p.shiny.fcts, "GUI_2danalysis.R"))
+#######################################################################
 # Helper functions
 
 # Winsorization function
@@ -62,33 +65,46 @@ OneHotEncoding <- function(datatable, colname = "test", min.factor.pct = 0.01){
   return(dt.int)
 }
 
+# A function that returns the n'th order part of the Legendre polynomial
+FLegendre <- function(x, m){
+  if(m == 1){y <- x}
+  if(m == 2){y <- 1/2 * ( 3 * x ** 2 -  1)}
+  if(m == 3){y <- 1/2 * ( 5 * x ** 3 -  3 * x)}
+  if(m == 4){y <- 1/8 * (35 * x ** 4 - 30 * x ** 2 +  3)}
+  if(m == 5){y <- 1/8 * (63 * x ** 5 - 70 * x ** 3 + 15 * x)}
+  return(y)
+}
+
 # A legendre fit up to 5th order
 FitLegendre <- function(dt, n = 3){
   
   dt <- as.data.table(dt)
   
-  FLegendre <- function(x, m){
-    if(m == 1){y <- x}
-    if(m == 2){y <- 1/2 * ( 3 * x ** 2 -  1)}
-    if(m == 3){y <- 1/2 * ( 5 * x ** 3 -  3 * x)}
-    if(m == 4){y <- 1/8 * (35 * x ** 4 - 30 * x ** 2 +  3)}
-    if(m == 5){y <- 1/8 * (63 * x ** 5 - 70 * x ** 3 + 15 * x)}
-    return(y)
-  }
-  
   if(n == 1){
     model <- lm(dt$y ~ FLegendre(x = dt$x, m = 1))
+    dt.fitline <- data.table(x = seq(dt[, min(x)], dt[, max(x)], length.out = 10))
+    dt.fitline[, y := coef(model)[[1]] + 
+                 coef(model)[[2]] * FLegendre(x, m = 1)]
   }
   
-  if(n == 3){
+  if(n == 2){
     model <- lm(dt$y ~ FLegendre(x = dt$x, m = 1) +
                   FLegendre(x = dt$x, m = 2))
+    dt.fitline <- data.table(x = seq(dt[, min(x)], dt[, max(x)], length.out = 50))
+    dt.fitline[, y := coef(model)[[1]] + 
+                 coef(model)[[2]] * FLegendre(x, m = 1) +
+                 coef(model)[[3]] * FLegendre(x, m = 2)]
   }
   
   if(n == 3){
     model <- lm(dt$y ~ FLegendre(x = dt$x, m = 1) +
                   FLegendre(x = dt$x, m = 2) +
                   FLegendre(x = dt$x, m = 3))
+    dt.fitline <- data.table(x = seq(dt[, min(x)], dt[, max(x)], length.out = 50))
+    dt.fitline[, y := coef(model)[[1]] + 
+                 coef(model)[[2]] * FLegendre(x, m = 1) +
+                 coef(model)[[3]] * FLegendre(x, m = 2) +
+                 coef(model)[[4]] * FLegendre(x, m = 3)]
   }
   
   if(n == 4){
@@ -96,6 +112,12 @@ FitLegendre <- function(dt, n = 3){
                   FLegendre(x = dt$x, m = 2) +
                   FLegendre(x = dt$x, m = 3) +
                   FLegendre(x = dt$x, m = 4))
+    dt.fitline <- data.table(x = seq(dt[, min(x)], dt[, max(x)], length.out = 50))
+    dt.fitline[, y := coef(model)[[1]] + 
+                 coef(model)[[2]] * FLegendre(x, m = 1) +
+                 coef(model)[[3]] * FLegendre(x, m = 2) +
+                 coef(model)[[4]] * FLegendre(x, m = 3) +
+                 coef(model)[[5]] * FLegendre(x, m = 4)]
   }
   
   if(n == 5){
@@ -104,9 +126,16 @@ FitLegendre <- function(dt, n = 3){
                   FLegendre(x = dt$x, m = 3) +
                   FLegendre(x = dt$x, m = 4) +
                   FLegendre(x = dt$x, m = 5))
+    dt.fitline <- data.table(x = seq(dt[, min(x)], dt[, max(x)], length.out = 50))
+    dt.fitline[, y := coef(model)[[1]] + 
+                 coef(model)[[2]] * FLegendre(x, m = 1) +
+                 coef(model)[[3]] * FLegendre(x, m = 2) +
+                 coef(model)[[4]] * FLegendre(x, m = 3) +
+                 coef(model)[[5]] * FLegendre(x, m = 4) +
+                 coef(model)[[6]] * FLegendre(x, m = 5)]
   }
   
-  return(model)
+  return(list(model = model, fitline = dt.fitline))
 }
 
 # Create a function that, similar to the winsorization function, looks at the inner x percentile of the data and then puts out a weight 

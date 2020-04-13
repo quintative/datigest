@@ -3,17 +3,24 @@ source("dev_functionalities/data_generation.R")
 
 ############################################################################################################
 
-# Create some data
-dt.x <- GenLinDataNorm(1000, y.norm = c(0, 1), x.norm = c(0, 1), rsq = 0.4)
-# AddIndepLinNorm(dt.x, "x2", "y")
-# AddIndepLinNorm(dt.x, "x3", "y")
-# Adding an outlier
-# dt.x <- rbind(dt.x, data.table(x = 140, y = 400))
+# Create data with a linear dpendence
+dt.x <- GenLinDataNorm(5000, y.norm = c(0, 3), x.norm = c(0, 3), rsq = 0.05)
 
-# Starting the regression
 source(paste0(p.shiny.fcts, "GUI_2danalysis.R"))
 GUI_2Danalysis(dt.x)
 
+# Create data with higher order non-linear dependence
+dt.x <- data.table(x = rnorm(3000))
+dt.x[, y := 1.2 * FLegendre(x, 1) + rnorm(3000) +
+       0.1 * FLegendre(x, 2) + rnorm(3000)+ 
+       0.3 * FLegendre(x, 3) + rnorm(3000) + 
+       0.05 * FLegendre(x, 4) + rnorm(3000)]
+
+source(paste0(p.shiny.fcts, "GUI_2danalysis.R"))
+GUI_2Danalysis(dt.x)
+
+
+############################################################################################################
 
 # Creating two normally distributed clusters
 dt.x <- data.table(x1 = rnorm(2000), y1 = rnorm(2000))
