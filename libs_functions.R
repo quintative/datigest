@@ -18,6 +18,9 @@ library(devtools)
 p.shiny.fcts <- paste0(getwd(), "/shiny_functions/")
 p.shiny.mods <- paste0(getwd(), "/shiny_modules/")
 #######################################################################
+# Load GUIs
+source(paste0(p.shiny.fcts, "GUI_2danalysis.R"))
+#######################################################################
 # Helper functions
 
 # Winsorization function

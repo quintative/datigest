@@ -7,7 +7,6 @@ GUI_2Danalysis <- function(data, temp = NULL){
   source(paste0(p.shiny.mods, "module_Cluster_kmeans.R"), local = T)
   source(paste0(p.shiny.mods, "module_Cluster_hc.R"), local = T)
   source(paste0(p.shiny.mods, "module_Cluster_db.R"), local = T)
-  source("ggplot_themes.R")
   
   # --------------------------------------------------------------------------------------------------------------
   
