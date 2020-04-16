@@ -2,6 +2,7 @@ source("libs_functions.R")
 source("dev_functionalities/data_generation.R")
 
 ############################################################################################################
+# OLS regression
 
 # Create data with a linear dpendence
 dt.x <- GenLinDataNorm(5000, y.norm = c(0, 3), x.norm = c(0, 3), rsq = 0.05)
@@ -19,8 +20,8 @@ dt.x[, y := 1.2 * FLegendre(x, 1) + rnorm(3000) +
 source(paste0(p.shiny.fcts, "GUI_2danalysis.R"))
 GUI_2Danalysis(dt.x)
 
-
 ############################################################################################################
+# Clustering
 
 # Creating two normally distributed clusters
 dt.x <- data.table(x1 = rnorm(2000), y1 = rnorm(2000))
@@ -31,4 +32,18 @@ dt.x[, x2 := rnorm(2000)]
 dt.x[, y2 := x2**2]
 
 # test
-GUI_2DClust(dt.x)
+source(paste0(p.shiny.fcts, "GUI_2danalysis.R"))
+GUI_2Danalysis(dt.x)
+
+
+############################################################################################################
+# Trying what happens with ranked variables
+
+# Create data with a linear dpendence
+dt.x <- GenLinDataNorm(5000, y.norm = c(0, 3), x.norm = c(0, 3), rsq = 0.2)
+
+# test
+source(paste0(p.shiny.fcts, "GUI_2danalysis.R"))
+GUI_2Danalysis(dt.x)
+
+
