@@ -10,6 +10,8 @@ library(MASS)
 # Shiny app
 library(shiny)
 library(shinydashboard)
+# knn regression
+library(caret)
 # Density Based Clustering
 library(fpc)
 # Developer tools

@@ -1,5 +1,5 @@
 # Run plot with regression (max number of points 1000)
-LinRegRobPlot <- function(data){
+LinRegRob <- function(data){
   
   colnames(data) <- c("x", "y")
   
@@ -76,7 +76,6 @@ RegressionLinUI <- function(id, label = "Regression") {
   dashboardPage(
     dashboardHeader(),
     dashboardSidebar(
-      tags$hr(),
       sliderInput(ns("sl.leg.order"), "Order of Leg. polynom",
                   min = 1, max = 5, value = 1, step = 1),
       actionButton(ns("do.legreg"), "OLS linar/Legendre link function"),
@@ -96,7 +95,7 @@ RegressionLin <- function(input, output, session, data){
   observeEvent(input$do.roblinreg, 
                {dt.int <- data()
                dt.int <- dt.int[(!is.na(x) & !is.na(y))]
-               plt <- LinRegRobPlot(dt.int)
+               plt <- LinRegRob(dt.int)
                output$plt.regr <- renderPlotly(plt)
                output$summ.regr <- renderPrint(print(NULL))})
   # ============================================================
