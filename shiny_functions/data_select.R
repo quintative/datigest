@@ -27,7 +27,12 @@ FileUI <- function(id, label = "fileselect") {
       
       tags$hr(),
       
-      actionButton(ns("do.justplot"), "Plot the data")
+      actionButton(ns("do.justplot"), "Plot the data"),
+      
+      tags$hr(),
+      
+      checkboxInput(ns("do.rank.x"), "Rank x"),
+      checkboxInput(ns("do.rank.y"), "Rank y")
     ),
     dashboardBody(dataTableOutput(ns("table")),
                   verbatimTextOutput(ns("txt.summ")),
@@ -42,19 +47,19 @@ File <- function(input, output, session, data){
   dt.main <- reactive({
     dt <- data()
     return(dt)
-  })
+    })
   # ============================================================
   # Show head of data
   output$table <- renderDataTable({
     if(is.null(dt.main())) return(NULL)
     return(dt.main())
-  }, options = list(pageLength = 10))
+    }, options = list(pageLength = 10))
   # ============================================================
   # Get summary of the data
   output$txt.summ <- renderPrint({
     if(is.null(dt.main())) return(NULL)
     return(summary(dt.main()))
-  })
+    })
   # ============================================================
   # Selection of the data.table columns
   observe({
@@ -67,20 +72,29 @@ File <- function(input, output, session, data){
                       inputId  = "col.y", 
                       choices  = x,
                       selected = x[2])
-  })
+    })
   # ============================================================
   # Create the selected sub-data.table
   dt.sel <- reactive({
-    dt.main()[, .(x = eval(parse(text = input$col.x)),
-                  y = eval(parse(text = input$col.y)))]
-  })
+    dt.int <- dt.main()[, .(x = eval(parse(text = input$col.x)),
+                            y = eval(parse(text = input$col.y)))]
+    
+    if(input$do.rank.x)
+      {dt.int <- TransfRank(dt.int, "x", mode = c(-1, 1))}
+    
+    if(input$do.rank.y)
+      {dt.int <- TransfRank(dt.int, "y", mode = c(-1, 1))}
+    
+    return(dt.int)
+    })
   # ============================================================
   # Plot the data
-  observeEvent(input$do.justplot, 
-               {dt.int <- dt.sel()
-               dt.int <- dt.int[(!is.na(x) & !is.na(y))]
-               plt <- JustPlot(dt.int)
-               output$plt.data <- renderPlotly(plt)})
+  observeEvent(input$do.justplot, {
+    dt.int <- dt.sel()
+    dt.int <- dt.int[(!is.na(x) & !is.na(y))]
+    plt <- JustPlot(dt.int)
+    output$plt.data <- renderPlotly(plt)
+    })
   
   return(dt.sel)
 }

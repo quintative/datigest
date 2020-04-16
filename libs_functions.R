@@ -1,4 +1,5 @@
 #######################################################################
+options(stringsAsFactors = FALSE)
 # All independent libraries
 # We want to keep this minimal
 library(data.table)
@@ -158,4 +159,30 @@ HuberLossWins <- function(y, inner.quantile = 0.9, sig.outlier = 5){
   })
   
   return(w)
+}
+
+# Rank and normalize data to a certain scale (0, 1), (-1, 1), (-5, 10)
+TransfRank <- function(datatable, var = "x", mode = c(0, 1)){
+  dt.int <- copy(datatable)
+  dt.int[, (var) := frank(get(var)) - 1]
+  max.rank <- dt.int[, max(get(var))]
+  dt.int[, (var) := get(var) / max.rank]
+  mode.diff <- mode[2] - mode[1]
+  dt.int[, (var) := (get(var) + mode[1] / mode.diff) * mode.diff]
+  return(dt.int)
+}
+
+# Quantile independent variable and get first two moments of the dependent variable
+TransfQuant <- function(datatable, varx = "x", vary = "y", quantiles = 10){
+  dt.int <- copy(datatable)
+  dt.int[, x_q := ntile(get(varx), quantiles)]
+  dt.int[, y_m := mean(get(vary), na.rm = T), by = .(x_q)]
+  dt.int[, y_s := sd(get(vary), na.rm = T), by = .(x_q)]
+  dt.int[, n := .N, by = .(x_q)]
+  dt.int[, y_95 := qt(0.975, n) * y_s / sqrt(n - 1)]
+  
+  dt.int <- unique(dt.int[, .(x = x_q, y = y_m, y_95)])
+  dt.int[, x := as.factor(x)]
+  setkey(dt.int, x)
+  return(dt.int)
 }

@@ -75,7 +75,7 @@ ClusterKM <- function(input, output, session, data){
     plt <- ElbowPlot(dt.int, input$sl.num.max.elb)
   
     return(plt)
-  })
+    })
   
   kmeans <- eventReactive(input$do.km, {
     dt.int <- data()
@@ -87,15 +87,15 @@ ClusterKM <- function(input, output, session, data){
     plt <- KmeansPlot(dt.int[, .(x_std, y_std)], input$sl.num.clust)
     
     return(plt)
-  })
+    })
   
   observe({
     output$plt.clust.km.elb <- renderPlotly({kmeans.ellb()})
-  })
+    })
   
   observe({
     output$plt.clust.km <- renderPlotly({kmeans()})
-  })
+    })
 }
 
 
