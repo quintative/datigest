@@ -22,14 +22,12 @@ GUI_2Danalysis(dt.x)
 
 ############################################################################################################
 # Clustering
-
+  
 # Creating two normally distributed clusters
-dt.x <- data.table(x1 = rnorm(2000), y1 = rnorm(2000))
-dt.x <- rbind(dt.x, data.table(x1 = rnorm(1000, 4), y1 = rnorm(1000, -4)))
-
-# Creating a few more weird clusters
-dt.x[, x2 := rnorm(2000)]
-dt.x[, y2 := x2**2]
+dt.x <- GenClustData(n = 100, center = c(0, 2), sigx = 0.1, sigy = 0.5)
+dt.x <- rbind(dt.x, GenClustData(n = 100, center = c(-1, -1), sigx = 1.8, sigy = 1.1))
+dt.x <- rbind(dt.x, GenClustData(n = 400, center = c(-3, 2), sigx = 0.1, sigy = 3.1))
+dt.x <- rbind(dt.x, GenCircleData(n = 500, r = 5, center = c(0, 0), sig = 0.1))
 
 # test
 source(paste0(p.shiny.fcts, "GUI_2danalysis.R"))
