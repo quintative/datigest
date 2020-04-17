@@ -42,3 +42,24 @@ AddIndepLinNorm <- function(datatable, x.name = "x", y.name = "y",
                              sqrt(1 - rsq) * rnorm(nrow(datatable), x.norm[1], x.norm[2]))]
 }
 
+# Create a circle of n points with radius r and noise sig.
+GenCircleData <- function(n = 1000, r = 1, center = c(0, 0), sig = 0.1){
+  # First, start with the first point at phi = 0
+  dt.int <- data.table(x = r * (1 + rnorm(1) * sig), y = 0 + r * rnorm(1) * sig)
+  # Let's think in polar coordinates. Distribute points over equal angles from each other:
+  d.phi <- seq(1 / n, 1 - 1 / n, length.out = n - 1) * 2
+  # Transform polar coordinates into cartesian
+  for(i in d.phi){
+    dt.int <- rbindlist(list(dt.int, data.table(x = r * (cospi(i) + rnorm(1) * sig), y = r * (sinpi(i) + rnorm(1) * sig))))
+  }
+  # Off-centering
+  dt.int[, ":=" (x = x + center[1], y = y + center[2])]
+  return(dt.int)
+}
+
+# Create normally distributed data
+GenClustData <- function(n = 1000, center = c(0, 0), sigx = 0.1, sigy = 0.1){
+  dt.int <- data.table(x = rnorm(n) * sigx + center[1], y = rnorm(n) * sigy + center[2])
+  return(dt.int)
+}
+
