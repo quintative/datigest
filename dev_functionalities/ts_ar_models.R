@@ -1,11 +1,9 @@
 source("libs_functions.R")
 
 #############################################################################################################################
-# First, let's make a martingale
-# Here, I am going to use a Gaussian random walk, where the step size varies according to a normal distribution
+# Geometric Brownian Motion
 
-# Create brownian motions using annual drift and volatility
-GenBrownMotion <- function(n.lambda = 10, s0 = c(1000), mu.lambda = c(0.1), sig.lambda = c(0.2), n.steps = 252){
+GeomBrownMotion <- function(n.lambda = 10, s0 = c(1000), mu.lambda = c(0.1), sig.lambda = c(0.2), n.steps = 252){
   
   # Examplified on Monte Carlo simulation of stock returns!
   # dS(t) = mu S(t) dt + sigma S(t) dB(t), S(0) = S0
@@ -53,8 +51,8 @@ GenBrownMotion <- function(n.lambda = 10, s0 = c(1000), mu.lambda = c(0.1), sig.
 }
 
 n.rep <- 20
-brewer.pal(100, "RdYlBu")
-test <- GenBrownMotion(n.lambda = 10, 
+
+test <- GeomBrownMotion(n.lambda = 10, 
                        s0 = rep(1, n.rep), 
                        mu.lambda = rep(0.1, n.rep), 
                        sig.lambda = rep(0.25, n.rep), 
