@@ -33,12 +33,11 @@ GeomBrownMotion <- function(n.lambda = 10, s0 = c(1000), mu.lambda = c(0.1), sig
   s <- matrix(0, length(mu.lambda), n.lambda * n.steps + 1) 
   s[, 1] <- s0
   
-  for(i in 2:(n.yrs * n.steps + 1)){
+  for(i in 2:(n.lambda * n.steps + 1)){
     s[, i] <- s[, i - 1] * exp((mu.lambda - sig.lambda**2 / 2) * h + sig.lambda * rnorm(length(mu.lambda)) * sqrt(h))
   }
   
-  
-  dt.int <- data.table(t = 0:(n.bdays * n.yrs))
+  dt.int <- data.table(t = 0:(n.steps * n.lambda))
   dt.int <- cbind(dt.int, data.table(t(s)))
   
   col.names <- paste0("b_", seq(1:length(mu.lambda)))
@@ -50,21 +49,56 @@ GeomBrownMotion <- function(n.lambda = 10, s0 = c(1000), mu.lambda = c(0.1), sig
   return(dt.int)
 }
 
-n.rep <- 20
-
+# Scale similarity!
+# Here, I am looking at business days
+n.rep <- 10
 test <- GeomBrownMotion(n.lambda = 10, 
-                       s0 = rep(1, n.rep), 
-                       mu.lambda = rep(0.1, n.rep), 
-                       sig.lambda = rep(0.25, n.rep), 
-                       n.steps = 252)
-
-
+                        s0 = rep(100, n.rep), 
+                        mu.lambda = rep(0.1, n.rep), 
+                        sig.lambda = rep(0.2, n.rep), 
+                        n.steps = 252)
 ggplotly(test %>% ggplot(aes(t, value, colour = martingale)) + 
-           geom_line() +
-           scale_y_continuous(breaks = seq(0, 50, 2))) %>% 
+           geom_line() + 
+           ggtitle("Geometric brownian motion of a 10 stocks with identical parameters")) %>% 
+  layout(showlegend = F)
+# Here at months
+test <- GeomBrownMotion(n.lambda = 10, 
+                        s0 = rep(100, n.rep), 
+                        mu.lambda = rep(0.1, n.rep), 
+                        sig.lambda = rep(0.2, n.rep), 
+                        n.steps = 12)
+ggplotly(test %>% ggplot(aes(t, value, colour = martingale)) + 
+           geom_line() + 
+           ggtitle("Geometric brownian motion of a 10 stocks with identical parameters")) %>% 
+  layout(showlegend = F)
+# Let's see hours
+test <- GeomBrownMotion(n.lambda = 10, 
+                        s0 = rep(100, n.rep), 
+                        mu.lambda = rep(0.1, n.rep), 
+                        sig.lambda = rep(0.2, n.rep), 
+                        n.steps = 252 * 8)
+ggplotly(test %>% ggplot(aes(t, value, colour = martingale)) + 
+           geom_line() + 
+           ggtitle("Geometric brownian motion of a 10 stocks with identical parameters")) %>% 
   layout(showlegend = F)
 
+
+n.rep <- 1000
+test <- GeomBrownMotion(n.lambda = 10, 
+                        s0 = rep(100, n.rep), 
+                        mu.lambda = rep(0.1, n.rep), 
+                        sig.lambda = rep(0.2, n.rep), 
+                        n.steps = 252)
+
+test[t == max(t), .(value)] %>% ggplot(aes(value)) + geom_histogram(color = "black", fill = "red", binwidth = 20) + coord_cartesian(xlim = c(0, 1000))
+test[t == max(t), .(value)] %>% ggplot(aes(log10(value))) + geom_histogram(color = "black", fill = "red")
+
 #############################################################################################################################
+
+WienerProces <- function(){
+  
+}
+
 
 
 # Create a Gaussian random walk with n steps and first two moments of the normal distribution
