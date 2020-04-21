@@ -53,14 +53,19 @@ GenBrownMotion <- function(n.lambda = 10, s0 = c(1000), mu.lambda = c(0.1), sig.
 }
 
 n.rep <- 20
+brewer.pal(100, "RdYlBu")
 test <- GenBrownMotion(n.lambda = 10, 
                        s0 = rep(1, n.rep), 
                        mu.lambda = rep(0.1, n.rep), 
-                       sig.lambda = rep(0.35, n.rep), 
+                       sig.lambda = rep(0.25, n.rep), 
                        n.steps = 252)
 
 
-test %>% plot_ly(x = ~t, y = ~value, color = ~martingale, colors = "Greens", type = "scatter", mode = "lines") %>% layout(showlegend = F) 
+ggplotly(test %>% ggplot(aes(t, value, colour = martingale)) + 
+           geom_line() +
+           scale_y_continuous(breaks = seq(0, 50, 2))) %>% 
+  layout(showlegend = F)
+
 #############################################################################################################################
 
 

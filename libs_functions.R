@@ -5,6 +5,7 @@ options(stringsAsFactors = FALSE)
 library(data.table)
 library(ggplot2)
 library(plotly)
+library(RColorBrewer)
 library(dplyr)
 library(MASS)
 # Shiny app
