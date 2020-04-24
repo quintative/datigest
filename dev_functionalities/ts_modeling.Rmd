@@ -1,0 +1,184 @@
+---
+title: "Time series modeling"
+author: "Andy Quindeau"
+date: "`r Sys.Date()`"
+output: 
+  prettydoc::html_pretty:
+    theme: cayman
+    highlight: github
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_knit$set(root.dir = "../")
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+source("libs_functions.R")
+```
+
+# Geometric Brownian Motion
+
+### Examplified on stock returns
+
+The stock price $S(t)$ over time is given by the SDE (stochastic differential equation):
+
+$$dS(t) = \mu S(t) dt + \sigma S(t) dB(t)$$
+Where  
+
+$S(0) = S_0 : \textrm{start price of the stock at time 0}$  
+$\mu : \textrm{drift of the process}$  
+$\sigma : \textrm{volatility}$  
+$B(t) : \textrm{Brownian motion}$  
+
+The solution to the SDE is:
+
+$$S(h + t) = S(t) e^{\left(\mu - 1/2 \sigma^2 \right) h + \sigma B(h)}$$
+
+One can assume a normal distribution for the Brownian motion with $B(h) \sim N(0, h)$
+
+Then, after rearranging for the return 
+
+$$R(t) = ln\left(\frac{S(t + h)}{S(t)}\right) \sim N \left[ \left( \mu - 1/2 \sigma^2 \right) h, \sigma^2 h \right] $$
+
+The conditional mean of the stockprice becomes
+
+$$E\left[ S(t + h) \ | \ S(t)\right] = S(t) e^{\mu h}$$
+
+Now let's build a function that generates an arb. number of 'martingales':
+
+```{r}
+GeomBrownMotion <- function(n.lambda = 10, 
+                            s0 = c(1000), 
+                            mu.lambda = c(0.1), 
+                            sig.lambda = c(0.2), 
+                            n.steps = 252){
+  
+  # n.lambda is the number of periods (number of years, for example)
+  # s0 is the starting value (can be a vector for multiple) 
+  # mu.lambda is the return per period
+  # sig.lambda is the volatility per period
+  # n.steps (number of time steps per period [granularity])
+  
+  # Calculating the size of time steps (equal distance)
+  h <- 1 / n.steps
+  
+  # Using vectorization to make everything super fast
+  s <- matrix(0, length(mu.lambda), n.lambda * n.steps + 1) 
+  
+  # Initializing the start values
+  s[, 1] <- s0
+  
+  # Creating the time series
+  for(i in 2:(n.lambda * n.steps + 1)){
+    s[, i] <- s[, i - 1] * exp((mu.lambda - sig.lambda**2 / 2) * h + sig.lambda * rnorm(length(mu.lambda)) * sqrt(h))
+  }
+  
+  # Creating a data.table in the long format
+  dt.int <- data.table(t = 0:(n.steps * n.lambda))
+  dt.int <- cbind(dt.int, data.table(t(s)))
+  col.names <- paste0("b_", seq(1:length(mu.lambda)))
+  colnames(dt.int) <- c("t", col.names)
+  dt.int <- melt.data.table(dt.int, id.vars = "t", variable.name = "martingale")
+  
+  return(dt.int)
+}
+```
+
+Let's do some tests:
+
+1. Testing if everything makes sense
+
+```{r}
+n.rep <- 10000
+test <- GeomBrownMotion(n.lambda = 1, 
+                        s0 = rep(1, n.rep), 
+                        mu.lambda = rep(log(1.1), n.rep), 
+                        sig.lambda = rep(0.2, n.rep), 
+                        n.steps = 252)
+test[t == max(t), .(mean(value), 2 * sd(value) / sqrt(.N))]
+```
+
+Yes, when I plug in the log-returns $ln(\textrm{annual returns})$, with some sensible volatility measures and average over a large number of stock price time series, I get $E\left[ S(t + h) \ | \ S(t)\right] = S(t) e^{\mu h}$
+
+2. Plotting some time series
+
+```{r echo=FALSE, fig.width=9}
+n.rep <- 10
+test <- GeomBrownMotion(n.lambda = 10, 
+                        s0 = rep(100, n.rep), 
+                        mu.lambda = rep(0.1, n.rep), 
+                        sig.lambda = rep(0.2, n.rep), 
+                        n.steps = 252)
+ggplotly(test %>% ggplot(aes(t, value, colour = martingale)) + 
+           geom_line() + 
+           ggtitle("Geometric brownian motion of 10 stocks over 10 years with identical parameters")) %>% 
+  layout(showlegend = F)
+```
+
+Here, the parameters where:
+
+```{r echo=FALSE}
+data.table(parameter = c("mu", "sig"), value = c(0.1, 0.2)) %>% kable(format = "html") %>% kable_styling()
+```
+
+# Maximum likelihood estimation
+
+### Finding parameters of the Brownian motion (i.e. the moments of the normal distribution $\mu$ and $\sigma$)
+
+The probability density function for the returns $R$ is:
+
+$$f\left[R(t)\right]=\frac{1}{\sqrt{2\pi\sigma^2h}}exp\left(-\frac{1}{2}\frac{\left(R(t)-\alpha\right)^2}{\sigma^2h}\right)$$
+
+with $\alpha=\left(\mu - \frac{1}{2}\sigma^2\right)h$
+
+For time steps t = 1, 2, 3, ... ,T the likelihood of the entire time series is 
+
+$$L = \prod f[R(t)]$$
+
+Or $LL = \sum ln(f[R(t)])$, which is easier to maximize computationally.
+
+```{r}
+LL <- function(params, s){
+  
+  h <- 1/length(s)
+  # Get the drift
+  alpha <- params[1]
+  # And the variance
+  sigma <- params[2]
+  # The log-function
+  logs <- -log(sqrt(2 * pi * sigma)) - 0.5 * ((s - alpha)**2 / sigma)
+  # sum
+  SLL <- -sum(logs)
+  
+  return(SLL)
+}
+```
+
+Set starting parameters
+
+```{r}
+# test <- GeomBrownMotion(n.lambda = 1,
+#                         s0 = 100,
+#                         mu.lambda = 0.1,
+#                         sig.lambda = 0.2,
+#                         n.steps = 10000)
+# 
+# res <- nlm(LL, c(0.001, 0.1), test[, value])
+```
+
+This seems to work most of the time, but the optimizer seemingly has issues finding the global minimum every time. 
+
+# Garch models
+
+Generalized Auto Regressive Conditional Heteroscedasticity
+
+Variance is a function of past variance. If the variance was constant, returns could be modeled like $r_t = \mu + e_t$, where $e_t \sim N(0, \sigma^2_t)$. Under the ARCH assumption, the variance is auto-correlated. Hence the model would look like:
+
+$$\sigma^2_t = \beta_0 + \sum^{p}_{j=1} \beta_1 \sigma^2_{t-j} + \sum^q_{k=1}\beta_{2k}e^2_{t-k}$$
+
+Where the current variance $\sigma^2_t$ is dependent on past variances $\sigma^2_{t-j}$ and past shocks $e^2_{t-k}$
+

@@ -3,9 +3,6 @@ options(stringsAsFactors = FALSE)
 # All independent libraries
 # We want to keep this minimal
 library(data.table)
-library(ggplot2)
-library(plotly)
-library(RColorBrewer)
 library(dplyr)
 library(MASS)
 # Shiny app
@@ -17,6 +14,11 @@ library(caret)
 library(fpc)
 # Developer tools
 library(devtools)
+# Viz
+library(ggplot2)
+library(plotly)
+library(RColorBrewer)
+library(kableExtra)
 #######################################################################
 # Paths
 p.shiny.fcts <- paste0(getwd(), "/shiny_functions/")
